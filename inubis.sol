@@ -1,134 +1,114 @@
 /**
- *Submitted for verification at Etherscan.io on 2021-07-20
+ *Submitted for verification at Etherscan.io on 2021-11-08
 */
 
 /*
-========================= 
-https://t.me/InubisTokenOfficial
-https://inubis.io/
-https://twitter.com/InubisToken
-
-Inubis: Protector of the Doge Realm
-
-Inubis comes packed with an automated buyback-burn algorithm, redistribution and bot protection. Inubis contract will automatically
-buyback Inubis tokens from the liquidity pool and will burn the tokens right away. This creates a shortage in circulating supply. 
-Inubis was designed to reward holders and discourage dumping.
-
-Fair launch on the Ethereum Network. No presale wallets that can dump on the community.
-
-TOKENOMICS
-Total supply: 100T
-Liquidity: 94%
-Dev Team: 3%
-Marketing: 3% 
-
-Buy Fees Total 9%: Redistribution: 3% + Buyback & Burn: 3% + Dev & Marketing: 3% 
-
-Sell Fees Total 15%: Redistribution: 5% + Buyback & Burn: 5% + Dev & Marketing: 5% 
-
-Liquidity will be locked & contract ownership will be renounced to ensure safety for all our holders.
-
-NOTE:  
-Slippage Recommended: 15%+
-1% Supply limit per TX for the first 5 minutes.
-========================= 
+*
+* Inubis is a decentralised crypto project with a focus on wildlife protection and conservation.
+*
+* Notable Features:
+* • Ethereum Dividends for holders (Minimum tokens to qualify for ETH Rewards: 20Billion $INUBIS)
+* • Monthly animal adoptions
+* • Quarterly donations to verified animal sanctuaries
+* • Anti 'Whale' dumping Protection
+* • Anti-Bot measures 
+* • External Buyback and burn
+*
+* Fees on transactions:
+* The total fees on the transaction for both buys and sells stand at 9%. Fees are broken down as shown below:
+*
+* • 5% Automatic Ethereum Dividends 
+* • 1% Marketing 
+* • 1% Charity 
+* • 1% Development 
+* • 1% Burn 
+*
+* 'doubleTaxDailySellAmount' (double tax threshold) = 500B $INUBIS
+* Total tax for sales above 'doubleTaxDailySellAmount' per day = 18%
+*
+* Telegram: t.me/inubistokenofficial 
+* Twitter: twitter.com/InubisToken 
+* Website: www.inubis.io
+*
 */
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+
+pragma solidity ^0.8.7;
 
 abstract contract Context {
-    function _msgSender() internal view virtual returns (address payable) {
+    function _msgSender() internal view virtual returns (address) {
         return msg.sender;
     }
 
-    function _msgData() internal view virtual returns (bytes memory) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+    function _msgData() internal view virtual returns (bytes calldata) {
+        this; 
         return msg.data;
     }
 }
 
 interface IERC20 {
-    /**
-    * @dev Returns the amount of tokens in existence.
-    */
+   
     function totalSupply() external view returns (uint256);
 
-    /**
-    * @dev Returns the amount of tokens owned by `account`.
-    */
     function balanceOf(address account) external view returns (uint256);
 
-    /**
-    * @dev Moves `amount` tokens from the caller's account to `recipient`.
-    *
-    * Returns a boolean value indicating whether the operation succeeded.
-    *
-    * Emits a {Transfer} event.
-    */
     function transfer(address recipient, uint256 amount) external returns (bool);
 
-    /**
-    * @dev Returns the remaining number of tokens that `spender` will be
-    * allowed to spend on behalf of `owner` through {transferFrom}. This is
-    * zero by default.
-    * This value changes when {approve} or {transferFrom} are called.
-    */
     function allowance(address owner, address spender) external view returns (uint256);
 
-    /**
-    * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.
-    *
-    * Returns a boolean value indicating whether the operation succeeded.
-    *
-    * IMPORTANT: Beware that changing an allowance with this method brings the risk
-    * that someone may use both the old and the new allowance by unfortunate
-    * transaction ordering. One possible solution to mitigate this race
-    * condition is to first reduce the spender's allowance to 0 and set the
-    * desired value afterwards:
-    * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-    *
-    * Emits an {Approval} event.
-    */
     function approve(address spender, uint256 amount) external returns (bool);
 
-    /**
-    * @dev Moves `amount` tokens from `sender` to `recipient` using the
-    * allowance mechanism. `amount` is then deducted from the caller's
-    * allowance.
-    *
-    * Returns a boolean value indicating whether the operation succeeded.
-    *
-    * Emits a {Transfer} event.
-    */
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
-    /**
-    * @dev Emitted when `value` tokens are moved from one account (`from`) to
-    * another (`to`).
-    *
-    * Note that `value` may be zero.
-    */
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    /**
-    * @dev Emitted when the allowance of a `spender` for an `owner` is set by
-    * a call to {approve}. `value` is the new allowance.
-    */
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
+interface IERC20Metadata is IERC20 {
+    
+    function name() external view returns (string memory);
+
+    function symbol() external view returns (string memory);
+
+    function decimals() external view returns (uint8);
+}
+
+interface DividendPayingTokenOptionalInterface {
+  
+    function withdrawableDividendOf(address _owner) external view returns(uint256);
+
+    function withdrawnDividendOf(address _owner) external view returns(uint256);
+
+    function accumulativeDividendOf(address _owner) external view returns(uint256);
+}
+
+interface DividendPayingTokenInterface {
+  
+    function dividendOf(address _owner) external view returns(uint256);
+
+    function distributeDividends() external payable;
+
+    function withdrawDividend() external;
+
+    event DividendsDistributed(
+        address indexed from,
+        uint256 weiAmount
+    );
+
+    event DividendWithdrawn(
+        address indexed to,
+        uint256 weiAmount
+    );
+}
+
 library SafeMath {
-    /**
-    * @dev Returns the addition of two unsigned integers, reverting on
-    * overflow.
-    *
-    * Counterpart to Solidity's `+` operator.
-    *
-    * Requirements:
-    *
-    * - Addition cannot overflow.
-    */
+   
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
         uint256 c = a + b;
         require(c >= a, "SafeMath: addition overflow");
@@ -136,30 +116,10 @@ library SafeMath {
         return c;
     }
 
-    /**
-    * @dev Returns the subtraction of two unsigned integers, reverting on
-    * overflow (when the result is negative).
-    *
-    * Counterpart to Solidity's `-` operator.
-    *
-    * Requirements:
-    *
-    * - Subtraction cannot overflow.
-    */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         return sub(a, b, "SafeMath: subtraction overflow");
     }
 
-    /**
-    * @dev Returns the subtraction of two unsigned integers, reverting with custom message on
-    * overflow (when the result is negative).
-    *
-    * Counterpart to Solidity's `-` operator.
-    *
-    * Requirements:
-    *
-    * - Subtraction cannot overflow.
-    */
     function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b <= a, errorMessage);
         uint256 c = a - b;
@@ -167,20 +127,7 @@ library SafeMath {
         return c;
     }
 
-    /**
-    * @dev Returns the multiplication of two unsigned integers, reverting on
-    * overflow.
-    *
-    * Counterpart to Solidity's `*` operator.
-    *
-    * Requirements:
-    *
-    * - Multiplication cannot overflow.
-    */
     function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
         if (a == 0) {
             return 0;
         }
@@ -191,334 +138,206 @@ library SafeMath {
         return c;
     }
 
-    /**
-    * @dev Returns the integer division of two unsigned integers. Reverts on
-    * division by zero. The result is rounded towards zero.
-    *
-    * Counterpart to Solidity's `/` operator. Note: this function uses a
-    * `revert` opcode (which leaves remaining gas untouched) while Solidity
-    * uses an invalid opcode to revert (consuming all remaining gas).
-    *
-    * Requirements:
-    *
-    * - The divisor cannot be zero.
-    */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
         return div(a, b, "SafeMath: division by zero");
     }
 
-    /**
-    * @dev Returns the integer division of two unsigned integers. Reverts with custom message on
-    * division by zero. The result is rounded towards zero.
-    *
-    * Counterpart to Solidity's `/` operator. Note: this function uses a
-    * `revert` opcode (which leaves remaining gas untouched) while Solidity
-    * uses an invalid opcode to revert (consuming all remaining gas).
-    *
-    * Requirements:
-    *
-    * - The divisor cannot be zero.
-    */
     function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b > 0, errorMessage);
         uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
         return c;
     }
 
-    /**
-    * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-    * Reverts when dividing by zero.
-    *
-    * Counterpart to Solidity's `%` operator. This function uses a `revert`
-    * opcode (which leaves remaining gas untouched) while Solidity uses an
-    * invalid opcode to revert (consuming all remaining gas).
-    *
-    * Requirements:
-    *
-    * - The divisor cannot be zero.
-    */
     function mod(uint256 a, uint256 b) internal pure returns (uint256) {
         return mod(a, b, "SafeMath: modulo by zero");
     }
 
-    /**
-    * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),
-    * Reverts with custom message when dividing by zero.
-    *
-    * Counterpart to Solidity's `%` operator. This function uses a `revert`
-    * opcode (which leaves remaining gas untouched) while Solidity uses an
-    * invalid opcode to revert (consuming all remaining gas).
-    *
-    * Requirements:
-    *
-    * - The divisor cannot be zero.
-    */
     function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
         require(b != 0, errorMessage);
         return a % b;
     }
 }
 
-library Address {
-    /**
-    * @dev Returns true if `account` is a contract.
-    *
-    * [IMPORTANT]
-    * ====
-    * It is unsafe to assume that an address for which this function returns
-    * false is an externally-owned account (EOA) and not a contract.
-    *
-    * Among others, `isContract` will return false for the following
-    * types of addresses:
-    *
-    *  - an externally-owned account
-    *  - a contract in construction
-    *  - an address where a contract will be created
-    *  - an address where a contract lived, but was destroyed
-    * ====
-    */
-    function isContract(address account) internal view returns (bool) {
-        // According to EIP-1052, 0x0 is the value returned for not-yet created accounts
-        // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned
-        // for accounts without code, i.e. `keccak256('')`
-        bytes32 codehash;
-        bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
-        // solhint-disable-next-line no-inline-assembly
-        assembly { codehash := extcodehash(account) }
-        return (codehash != accountHash && codehash != 0x0);
+/*
+MIT License
+
+Copyright (c) 2018 requestnetwork
+Copyright (c) 2018 Fragments, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+library SafeMathInt {
+    int256 private constant MIN_INT256 = int256(1) << 255;
+    int256 private constant MAX_INT256 = ~(int256(1) << 255);
+
+    function mul(int256 a, int256 b) internal pure returns (int256) {
+        int256 c = a * b;
+
+        require(c != MIN_INT256 || (a & MIN_INT256) != (b & MIN_INT256));
+        require((b == 0) || (c / b == a));
+        return c;
     }
 
-    /**
-    * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
-    * `recipient`, forwarding all available gas and reverting on errors.
-    *
-    * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
-    * of certain opcodes, possibly making contracts go over the 2300 gas limit
-    * imposed by `transfer`, making them unable to receive funds via
-    * `transfer`. {sendValue} removes this limitation.
-    *
-    * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
-    *
-    * IMPORTANT: because control is transferred to `recipient`, care must be
-    * taken to not create reentrancy vulnerabilities. Consider using
-    * {ReentrancyGuard} or the
-    * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
-    */
-    function sendValue(address payable recipient, uint256 amount) internal {
-        require(address(this).balance >= amount, "Address: insufficient balance");
-
-        // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
-        (bool success, ) = recipient.call{ value: amount }("");
-        require(success, "Address: unable to send value, recipient may have reverted");
+    function div(int256 a, int256 b) internal pure returns (int256) {
+        require(b != -1 || a != MIN_INT256);
+        return a / b;
     }
 
-    /**
-    * @dev Performs a Solidity function call using a low level `call`. A
-    * plain`call` is an unsafe replacement for a function call: use this
-    * function instead.
-    *
-    * If `target` reverts with a revert reason, it is bubbled up by this
-    * function (like regular Solidity function calls).
-    *
-    * Returns the raw returned data. To convert to the expected return value,
-    * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
-    *
-    * Requirements:
-    *
-    * - `target` must be a contract.
-    * - calling `target` with `data` must not revert.
-    *
-    * _Available since v3.1._
-    */
-    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
-    return functionCall(target, data, "Address: low-level call failed");
+    function sub(int256 a, int256 b) internal pure returns (int256) {
+        int256 c = a - b;
+        require((b >= 0 && c <= a) || (b < 0 && c > a));
+        return c;
     }
 
-    /**
-    * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
-    * `errorMessage` as a fallback revert reason when `target` reverts.
-    *
-    * _Available since v3.1._
-    */
-    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
-        return _functionCallWithValue(target, data, 0, errorMessage);
+    function add(int256 a, int256 b) internal pure returns (int256) {
+        int256 c = a + b;
+        require((b >= 0 && c >= a) || (b < 0 && c < a));
+        return c;
     }
 
-    /**
-    * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-    * but also transferring `value` wei to `target`.
-    *
-    * Requirements:
-    *
-    * - the calling contract must have an ETH balance of at least `value`.
-    * - the called Solidity function must be `payable`.
-    *
-    * _Available since v3.1._
-    */
-    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
-        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    function abs(int256 a) internal pure returns (int256) {
+        require(a != MIN_INT256);
+        return a < 0 ? -a : a;
     }
 
-    /**
-    * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
-    * with `errorMessage` as a fallback revert reason when `target` reverts.
-    *
-    * _Available since v3.1._
-    */
-    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
-        require(address(this).balance >= value, "Address: insufficient balance for call");
-        return _functionCallWithValue(target, data, value, errorMessage);
+
+    function toUint256Safe(int256 a) internal pure returns (uint256) {
+        require(a >= 0);
+        return uint256(a);
     }
+}
 
-    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
-        require(isContract(target), "Address: call to non-contract");
-
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{ value: weiValue }(data);
-        if (success) {
-            return returndata;
-        } else {
-            // Look for revert reason and bubble it up if present
-            if (returndata.length > 0) {
-                // The easiest way to bubble the revert reason is using memory via assembly
-
-                // solhint-disable-next-line no-inline-assembly
-                assembly {
-                    let returndata_size := mload(returndata)
-                    revert(add(32, returndata), returndata_size)
-                }
-            } else {
-                revert(errorMessage);
-            }
-        }
-    }
+library SafeMathUint {
+  function toInt256Safe(uint256 a) internal pure returns (int256) {
+    int256 b = int256(a);
+    require(b >= 0);
+    return b;
+  }
 }
 
 contract Ownable is Context {
     address private _owner;
-    address private _previousOwner;
-    uint256 private _lockTime;
-    address private _reflectionRemoverForCEX = address(0xd84e482f68889379e9A4796a4275469B2c1CEcBF); //Only for excluding CEXs' wallet addressess from fees & redistribution.
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-    /**
-    * @dev Initializes the contract setting the deployer as the initial owner.
-    */
-    constructor () internal {
+    constructor () {
         address msgSender = _msgSender();
         _owner = msgSender;
         emit OwnershipTransferred(address(0), msgSender);
     }
 
-    /**
-    * @dev Returns the address of the current owner.
-    */
     function owner() public view returns (address) {
         return _owner;
     }
 
-    /**
-    * @dev Throws if called by any account other than the owner.
-    */
     modifier onlyOwner() {
         require(_owner == _msgSender(), "Ownable: caller is not the owner");
         _;
     }
-    
-    /**
-    * @dev Throws if called by any account other than the owner or reflectionRemoverForCEX.
-    * In most cases after renouncing the ownership, it is impossible to add CEX's wallet addresses to the 'fee and redistribution exclusion list'.
-    * ReflectionRemoverForCEX role allows adding CEX wallet addresses in the 'fee & redistribution exclusion list' after ownership renouncement.
-    * ReflectionRemoverForCEX will have special access only for the following functions: disableRedistributionForAccount(), disableRedistributionForAccount() & enableRedistributionForAccount().
-    */
-    modifier onlyOwnerOrReflectionRemoverForCEX() {
-        require((_owner == _msgSender() || _reflectionRemoverForCEX == _msgSender()), "Ownable: caller is not the owner or reflectionRemoverForCEX");
-        _;
-    }
 
-    /**
-    * @dev Leaves the contract without owner. It will not be possible to call
-    * `onlyOwner` functions anymore. Can only be called by the current owner.
-    *
-    * NOTE: Renouncing ownership will leave the contract without an owner,
-    * thereby removing any functionality that is only available to the owner.
-    */
     function renounceOwnership() public virtual onlyOwner {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
     }
 
-    /**
-    * @dev Transfers ownership of the contract to a new account (`newOwner`).
-    * Can only be called by the current owner.
-    */
     function transferOwnership(address newOwner) public virtual onlyOwner {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
-
-    function geUnlockTime() public view returns (uint256) {
-        return _lockTime;
-    }
-
-    //Locks the contract for owner for the amount of time provided
-    function lock(uint256 time) public virtual onlyOwner {
-        _previousOwner = _owner;
-        _owner = address(0);
-        _lockTime = now + time;
-        emit OwnershipTransferred(_owner, address(0));
-    }
-
-    //Unlocks the contract for owner when _lockTime is exceeds
-    function unlock() public virtual {
-        require(_previousOwner == msg.sender, "You don't have permission to unlock");
-        require(now > _lockTime , "Contract is locked until 7 days");
-        emit OwnershipTransferred(_owner, _previousOwner);
-        _owner = _previousOwner;
-    }
 }
 
-interface IUniswapV2Factory {
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+library IterableMapping {
+    struct Map {
+        address[] keys;
+        mapping(address => uint) values;
+        mapping(address => uint) indexOf;
+        mapping(address => bool) inserted;
+    }
 
-    function feeTo() external view returns (address);
-    function feeToSetter() external view returns (address);
+    function get(Map storage map, address key) public view returns (uint) {
+        return map.values[key];
+    }
 
-    function getPair(address tokenA, address tokenB) external view returns (address pair);
-    function allPairs(uint) external view returns (address pair);
-    function allPairsLength() external view returns (uint);
+    function getIndexOfKey(Map storage map, address key) public view returns (int) {
+        if(!map.inserted[key]) {
+            return -1;
+        }
+        return int(map.indexOf[key]);
+    }
 
-    function createPair(address tokenA, address tokenB) external returns (address pair);
+    function getKeyAtIndex(Map storage map, uint index) public view returns (address) {
+        return map.keys[index];
+    }
 
-    function setFeeTo(address) external;
-    function setFeeToSetter(address) external;
+    function size(Map storage map) public view returns (uint) {
+        return map.keys.length;
+    }
+
+    function set(Map storage map, address key, uint val) public {
+        if (map.inserted[key]) {
+            map.values[key] = val;
+        } else {
+            map.inserted[key] = true;
+            map.values[key] = val;
+            map.indexOf[key] = map.keys.length;
+            map.keys.push(key);
+        }
+    }
+
+    function remove(Map storage map, address key) public {
+        if (!map.inserted[key]) {
+            return;
+        }
+
+        delete map.inserted[key];
+        delete map.values[key];
+
+        uint index = map.indexOf[key];
+        uint lastIndex = map.keys.length - 1;
+        address lastKey = map.keys[lastIndex];
+
+        map.indexOf[lastKey] = index;
+        delete map.indexOf[key];
+
+        map.keys[index] = lastKey;
+        map.keys.pop();
+    }
 }
 
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
-
     function name() external pure returns (string memory);
     function symbol() external pure returns (string memory);
     function decimals() external pure returns (uint8);
     function totalSupply() external view returns (uint);
     function balanceOf(address owner) external view returns (uint);
     function allowance(address owner, address spender) external view returns (uint);
-
     function approve(address spender, uint value) external returns (bool);
     function transfer(address to, uint value) external returns (bool);
     function transferFrom(address from, address to, uint value) external returns (bool);
-
     function DOMAIN_SEPARATOR() external view returns (bytes32);
     function PERMIT_TYPEHASH() external pure returns (bytes32);
     function nonces(address owner) external view returns (uint);
-
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
-
     event Mint(address indexed sender, uint amount0, uint amount1);
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
     event Swap(
@@ -530,7 +349,6 @@ interface IUniswapV2Pair {
         address indexed to
     );
     event Sync(uint112 reserve0, uint112 reserve1);
-
     function MINIMUM_LIQUIDITY() external pure returns (uint);
     function factory() external view returns (address);
     function token0() external view returns (address);
@@ -539,20 +357,29 @@ interface IUniswapV2Pair {
     function price0CumulativeLast() external view returns (uint);
     function price1CumulativeLast() external view returns (uint);
     function kLast() external view returns (uint);
-
     function mint(address to) external returns (uint liquidity);
     function burn(address to) external returns (uint amount0, uint amount1);
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
     function skim(address to) external;
     function sync() external;
-
     function initialize(address, address) external;
+}
+
+interface IUniswapV2Factory {
+    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    function feeTo() external view returns (address);
+    function feeToSetter() external view returns (address);
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
+    function allPairs(uint) external view returns (address pair);
+    function allPairsLength() external view returns (uint);
+    function createPair(address tokenA, address tokenB) external returns (address pair);
+    function setFeeTo(address) external;
+    function setFeeToSetter(address) external;
 }
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
     function WETH() external pure returns (address);
-
     function addLiquidity(
         address tokenA,
         address tokenB,
@@ -635,13 +462,13 @@ interface IUniswapV2Router01 {
         external
         payable
         returns (uint[] memory amounts);
-
     function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
     function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
     function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
     function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
     function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
 }
+
 
 interface IUniswapV2Router02 is IUniswapV2Router01 {
     function removeLiquidityETHSupportingFeeOnTransferTokens(
@@ -684,255 +511,62 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
     ) external;
 }
 
-// Contract implementation
-contract Inubis is Context, IERC20, Ownable {
+contract ERC20 is Context, IERC20, IERC20Metadata {
     using SafeMath for uint256;
-    using Address for address;
 
-    mapping (address => uint256) private _rOwned;
-    mapping (address => uint256) private _tOwned;
-    mapping (address => mapping (address => uint256)) private _allowances;
-    
-    mapping (address => bool) private _isSniper;
-    address[] private _confirmedSnipers;
+    mapping(address => uint256) private _balances;
 
-    mapping (address => bool) private _isExcludedFromFee;
-    mapping (address => bool) private _isExcluded;
-    address[] private _excluded;
-    
-    address public immutable deadAddress = 0x000000000000000000000000000000000000dEaD;
+    mapping(address => mapping(address => uint256)) private _allowances;
 
-    uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 100000000000000 * 10**9;
-    uint256 private _rTotal = (MAX - (MAX % _tTotal));
-    uint256 private _tFeeTotal;
+    uint256 private _totalSupply;
 
-    string private _name = 'Inubis';
-    string private _symbol = 'INUBIS';
-    uint8 private _decimals = 9;
+    string private _name;
+    string private _symbol;
 
-    uint256 private _redistributionFee = 5;
-    uint256 private _buybackPlusTeamAndMarketingFee = 10;//5:5
-    
-    address payable public _teamAndMarketingAddress;
-
-    IUniswapV2Router02 public _uniswapV2Router;
-    address public _uniswapV2Pair;
-    
-    bool _inSwap = false;
-    bool public _buybackPlusTeamAndMarketingEnabled = false;
-    bool public _tradingOpen = false; //once switched on, can never be switched off.
-    uint256 public _launchTime;
-
-    uint256 private _maxTxAmount = 1000000000000 * 10**9;
-    // We will set a minimum amount of tokens to be swaped => 5B
-    uint256 private _minimumTokensBeforeSwap = 5 * 10**9 * 10**9; //5B
-
-    modifier lockTheSwap {
-        _inSwap = true;
-        _;
-        _inSwap = false;
+    constructor(string memory name_, string memory symbol_) {
+        _name = name_;
+        _symbol = symbol_;
     }
 
-    constructor (address payable teamAndMarketingAddress) public {
-        _teamAndMarketingAddress = teamAndMarketingAddress;
-        _rOwned[_msgSender()] = _rTotal;
-        emit Transfer(address(0), _msgSender(), _tTotal);
-    }
-    
-    function initContract() external onlyOwner() {
-        IUniswapV2Router02 uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D); // UniswapV2 for Ethereum network
-        // Create a uniswap pair for this new token
-        _uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory())
-            .createPair(address(this), uniswapV2Router.WETH());
-
-        // set the rest of the contract variables
-        _uniswapV2Router = uniswapV2Router;
-
-        // Exclude owner and this contract from fee
-        _isExcludedFromFee[owner()] = true;
-        _isExcludedFromFee[address(this)] = true;
-        
-        // List of front-runner & sniper bots
-        _isSniper[address(0x7589319ED0fD750017159fb4E4d96C63966173C1)] = true;
-        _confirmedSnipers.push(address(0x7589319ED0fD750017159fb4E4d96C63966173C1));
-
-        _isSniper[address(0x65A67DF75CCbF57828185c7C050e34De64d859d0)] = true;
-        _confirmedSnipers.push(address(0x65A67DF75CCbF57828185c7C050e34De64d859d0));
-
-        _isSniper[address(0xE031b36b53E53a292a20c5F08fd1658CDdf74fce)] = true;
-        _confirmedSnipers.push(address(0xE031b36b53E53a292a20c5F08fd1658CDdf74fce));
-
-        _isSniper[address(0xE031b36b53E53a292a20c5F08fd1658CDdf74fce)] = true;
-        _confirmedSnipers.push(address(0xE031b36b53E53a292a20c5F08fd1658CDdf74fce));
-
-        _isSniper[address(0xe516bDeE55b0b4e9bAcaF6285130De15589B1345)] = true;
-        _confirmedSnipers.push(address(0xe516bDeE55b0b4e9bAcaF6285130De15589B1345));
-
-        _isSniper[address(0xa1ceC245c456dD1bd9F2815a6955fEf44Eb4191b)] = true;
-        _confirmedSnipers.push(address(0xa1ceC245c456dD1bd9F2815a6955fEf44Eb4191b));
-
-        _isSniper[address(0xd7d3EE77D35D0a56F91542D4905b1a2b1CD7cF95)] = true;
-        _confirmedSnipers.push(address(0xd7d3EE77D35D0a56F91542D4905b1a2b1CD7cF95));
-
-        _isSniper[address(0xFe76f05dc59fEC04184fA0245AD0C3CF9a57b964)] = true;
-        _confirmedSnipers.push(address(0xFe76f05dc59fEC04184fA0245AD0C3CF9a57b964));
-
-        _isSniper[address(0xDC81a3450817A58D00f45C86d0368290088db848)] = true;
-        _confirmedSnipers.push(address(0xDC81a3450817A58D00f45C86d0368290088db848));
-
-        _isSniper[address(0x45fD07C63e5c316540F14b2002B085aEE78E3881)] = true;
-        _confirmedSnipers.push(address(0x45fD07C63e5c316540F14b2002B085aEE78E3881));
-
-        _isSniper[address(0x27F9Adb26D532a41D97e00206114e429ad58c679)] = true;
-        _confirmedSnipers.push(address(0x27F9Adb26D532a41D97e00206114e429ad58c679));
-
-        _isSniper[address(0x9282dc5c422FA91Ff2F6fF3a0b45B7BF97CF78E7)] = true;
-        _confirmedSnipers.push(address(0x9282dc5c422FA91Ff2F6fF3a0b45B7BF97CF78E7));
-
-        _isSniper[address(0xfad95B6089c53A0D1d861eabFaadd8901b0F8533)] = true;
-        _confirmedSnipers.push(address(0xfad95B6089c53A0D1d861eabFaadd8901b0F8533));
-
-        _isSniper[address(0x1d6E8BAC6EA3730825bde4B005ed7B2B39A2932d)] = true;
-        _confirmedSnipers.push(address(0x1d6E8BAC6EA3730825bde4B005ed7B2B39A2932d));
-
-        _isSniper[address(0x000000000000084e91743124a982076C59f10084)] = true;
-        _confirmedSnipers.push(address(0x000000000000084e91743124a982076C59f10084));
-
-        _isSniper[address(0x6dA4bEa09C3aA0761b09b19837D9105a52254303)] = true;
-        _confirmedSnipers.push(address(0x6dA4bEa09C3aA0761b09b19837D9105a52254303));
-
-        _isSniper[address(0x323b7F37d382A68B0195b873aF17CeA5B67cd595)] = true;
-        _confirmedSnipers.push(address(0x323b7F37d382A68B0195b873aF17CeA5B67cd595));
-
-        _isSniper[address(0x000000005804B22091aa9830E50459A15E7C9241)] = true;
-        _confirmedSnipers.push(address(0x000000005804B22091aa9830E50459A15E7C9241));
-
-        _isSniper[address(0xA3b0e79935815730d942A444A84d4Bd14A339553)] = true;
-        _confirmedSnipers.push(address(0xA3b0e79935815730d942A444A84d4Bd14A339553));
-
-        _isSniper[address(0xf6da21E95D74767009acCB145b96897aC3630BaD)] = true;
-        _confirmedSnipers.push(address(0xf6da21E95D74767009acCB145b96897aC3630BaD));
-
-        _isSniper[address(0x0000000000007673393729D5618DC555FD13f9aA)] = true;
-        _confirmedSnipers.push(address(0x0000000000007673393729D5618DC555FD13f9aA));
-
-        _isSniper[address(0x00000000000003441d59DdE9A90BFfb1CD3fABf1)] = true;
-        _confirmedSnipers.push(address(0x00000000000003441d59DdE9A90BFfb1CD3fABf1));
-
-        _isSniper[address(0x59903993Ae67Bf48F10832E9BE28935FEE04d6F6)] = true;
-        _confirmedSnipers.push(address(0x59903993Ae67Bf48F10832E9BE28935FEE04d6F6));
-
-        _isSniper[address(0x000000917de6037d52b1F0a306eeCD208405f7cd)] = true;
-        _confirmedSnipers.push(address(0x000000917de6037d52b1F0a306eeCD208405f7cd));
-
-        _isSniper[address(0x7100e690554B1c2FD01E8648db88bE235C1E6514)] = true;
-        _confirmedSnipers.push(address(0x7100e690554B1c2FD01E8648db88bE235C1E6514));
-
-        _isSniper[address(0x72b30cDc1583224381132D379A052A6B10725415)] = true;
-        _confirmedSnipers.push(address(0x72b30cDc1583224381132D379A052A6B10725415));
-
-        _isSniper[address(0x9eDD647D7d6Eceae6bB61D7785Ef66c5055A9bEE)] = true;
-        _confirmedSnipers.push(address(0x9eDD647D7d6Eceae6bB61D7785Ef66c5055A9bEE));
-
-        _isSniper[address(0xfe9d99ef02E905127239E85A611c29ad32c31c2F)] = true;
-        _confirmedSnipers.push(address(0xfe9d99ef02E905127239E85A611c29ad32c31c2F));
-
-        _isSniper[address(0x39608b6f20704889C51C0Ae28b1FCA8F36A5239b)] = true;
-        _confirmedSnipers.push(address(0x39608b6f20704889C51C0Ae28b1FCA8F36A5239b));
-
-        _isSniper[address(0xc496D84215d5018f6F53E7F6f12E45c9b5e8e8A9)] = true;
-        _confirmedSnipers.push(address(0xc496D84215d5018f6F53E7F6f12E45c9b5e8e8A9));
-
-        _isSniper[address(0x59341Bc6b4f3Ace878574b05914f43309dd678c7)] = true;
-        _confirmedSnipers.push(address(0x59341Bc6b4f3Ace878574b05914f43309dd678c7));
-
-        _isSniper[address(0xe986d48EfeE9ec1B8F66CD0b0aE8e3D18F091bDF)] = true;
-        _confirmedSnipers.push(address(0xe986d48EfeE9ec1B8F66CD0b0aE8e3D18F091bDF));
-
-        _isSniper[address(0x4aEB32e16DcaC00B092596ADc6CD4955EfdEE290)] = true;
-        _confirmedSnipers.push(address(0x4aEB32e16DcaC00B092596ADc6CD4955EfdEE290));
-
-        _isSniper[address(0x136F4B5b6A306091b280E3F251fa0E21b1280Cd5)] = true;
-        _confirmedSnipers.push(address(0x136F4B5b6A306091b280E3F251fa0E21b1280Cd5));
-
-        _isSniper[address(0x39608b6f20704889C51C0Ae28b1FCA8F36A5239b)] = true;
-        _confirmedSnipers.push(address(0x39608b6f20704889C51C0Ae28b1FCA8F36A5239b));
-
-        _isSniper[address(0x5B83A351500B631cc2a20a665ee17f0dC66e3dB7)] = true;
-        _confirmedSnipers.push(address(0x5B83A351500B631cc2a20a665ee17f0dC66e3dB7));
-
-        _isSniper[address(0xbCb05a3F85d34f0194C70d5914d5C4E28f11Cc02)] = true;
-        _confirmedSnipers.push(address(0xbCb05a3F85d34f0194C70d5914d5C4E28f11Cc02));
-
-        _isSniper[address(0x22246F9BCa9921Bfa9A3f8df5baBc5Bc8ee73850)] = true;
-        _confirmedSnipers.push(address(0x22246F9BCa9921Bfa9A3f8df5baBc5Bc8ee73850));
-
-        _isSniper[address(0x42d4C197036BD9984cA652303e07dD29fA6bdB37)] = true;
-        _confirmedSnipers.push(address(0x42d4C197036BD9984cA652303e07dD29fA6bdB37));
-
-        _isSniper[address(0x00000000003b3cc22aF3aE1EAc0440BcEe416B40)] = true;
-        _confirmedSnipers.push(address(0x00000000003b3cc22aF3aE1EAc0440BcEe416B40));
-
-        _isSniper[address(0x231DC6af3C66741f6Cf618884B953DF0e83C1A2A)] = true;
-        _confirmedSnipers.push(address(0x231DC6af3C66741f6Cf618884B953DF0e83C1A2A));
-
-        _isSniper[address(0xC6bF34596f74eb22e066a878848DfB9fC1CF4C65)] = true;
-        _confirmedSnipers.push(address(0xC6bF34596f74eb22e066a878848DfB9fC1CF4C65));
-
-        _isSniper[address(0x20f6fCd6B8813c4f98c0fFbD88C87c0255040Aa3)] = true;
-        _confirmedSnipers.push(address(0x20f6fCd6B8813c4f98c0fFbD88C87c0255040Aa3));
-
-        _isSniper[address(0xD334C5392eD4863C81576422B968C6FB90EE9f79)] = true;
-        _confirmedSnipers.push(address(0xD334C5392eD4863C81576422B968C6FB90EE9f79));
-
-        _isSniper[address(0xFFFFF6E70842330948Ca47254F2bE673B1cb0dB7)] = true;
-        _confirmedSnipers.push(address(0xFFFFF6E70842330948Ca47254F2bE673B1cb0dB7));
-
-        _isSniper[address(0xA39C50bf86e15391180240938F469a7bF4fDAe9a)] = true;
-        _confirmedSnipers.push(address(0xA39C50bf86e15391180240938F469a7bF4fDAe9a));
-
-        _isSniper[address(0xA39C50bf86e15391180240938F469a7bF4fDAe9a)] = true;
-        _confirmedSnipers.push(address(0xA39C50bf86e15391180240938F469a7bF4fDAe9a));
-        
-    }
-
-    function name() public view returns (string memory) {
+    function name() public view virtual override returns (string memory) {
         return _name;
     }
 
-    function symbol() public view returns (string memory) {
+    function symbol() public view virtual override returns (string memory) {
         return _symbol;
     }
 
-    function decimals() public view returns (uint8) {
-        return _decimals;
+    function decimals() public view virtual override returns (uint8) {
+        return 9;
     }
 
-    function totalSupply() public view override returns (uint256) {
-        return _tTotal;
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply;
     }
 
-    function balanceOf(address account) public view override returns (uint256) {
-        if (_isExcluded[account]) return _tOwned[account];
-        return tokenFromReflection(_rOwned[account]);
+    function balanceOf(address account) public view virtual override returns (uint256) {
+        return _balances[account];
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
 
-    function allowance(address owner, address spender) public view override returns (uint256) {
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
     }
 
-    function approve(address spender, uint256 amount) public override returns (bool) {
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
         _transfer(sender, recipient, amount);
         _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "ERC20: transfer amount exceeds allowance"));
         return true;
@@ -948,94 +582,46 @@ contract Inubis is Context, IERC20, Ownable {
         return true;
     }
 
-    function isExcluded(address account) public view returns (bool) {
-        return _isExcluded[account];
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal virtual {
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
+
+        _beforeTokenTransfer(sender, recipient, amount);
+
+        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
+        _balances[recipient] = _balances[recipient].add(amount);
+        emit Transfer(sender, recipient, amount);
     }
 
-    function setExcludeFromFee(address account, bool excluded) external onlyOwnerOrReflectionRemoverForCEX() {
-        _isExcludedFromFee[account] = excluded;
+    function _mint(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: mint to the zero address");
+
+        _beforeTokenTransfer(address(0), account, amount);
+
+        _totalSupply = _totalSupply.add(amount);
+        _balances[account] = _balances[account].add(amount);
+        emit Transfer(address(0), account, amount);
     }
 
-    function totalFees() public view returns (uint256) {
-        return _tFeeTotal;
+    function _burn(address account, uint256 amount) internal virtual {
+        require(account != address(0), "ERC20: burn from the zero address");
+
+        _beforeTokenTransfer(account, address(0), amount);
+
+        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
+        _totalSupply = _totalSupply.sub(amount);
+        emit Transfer(account, address(0), amount);
     }
 
-    function deliver(uint256 tAmount) public {
-        address sender = _msgSender();
-        require(!_isExcluded[sender], "Excluded addresses cannot call this function");
-        (uint256 rAmount,,,,,) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rTotal = _rTotal.sub(rAmount);
-        _tFeeTotal = _tFeeTotal.add(tAmount);
-    }
-
-    function reflectionFromToken(uint256 tAmount, bool deductTransferFee) public view returns(uint256) {
-        require(tAmount <= _tTotal, "Amount must be less than supply");
-        if (!deductTransferFee) {
-            (uint256 rAmount,,,,,) = _getValues(tAmount);
-            return rAmount;
-        } else {
-            (,uint256 rTransferAmount,,,,) = _getValues(tAmount);
-            return rTransferAmount;
-        }
-    }
-
-    function tokenFromReflection(uint256 rAmount) public view returns(uint256) {
-        require(rAmount <= _rTotal, "Amount must be less than total reflections");
-        uint256 currentRate =  _getRate();
-        return rAmount.div(currentRate);
-    }
-    
-    function isRemovedSniper(address account) public view returns (bool) {
-        return _isSniper[account];
-    }
-
-    //function to disable redistribution for addresses
-    function disableRedistributionForAccount(address account) external onlyOwnerOrReflectionRemoverForCEX() {
-        require(!_isExcluded[account], "Account is already excluded");
-        if(_rOwned[account] > 0) {
-            _tOwned[account] = tokenFromReflection(_rOwned[account]);
-        }
-        _isExcluded[account] = true;
-        _excluded.push(account);
-    }
-
-    //function to enable redistribution for addresses
-    function enableRedistributionForAccount(address account) external onlyOwnerOrReflectionRemoverForCEX() {
-        require(_isExcluded[account], "Account is already excluded");
-        for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_excluded[i] == account) {
-                _excluded[i] = _excluded[_excluded.length - 1];
-                _tOwned[account] = 0;
-                _isExcluded[account] = false;
-                _excluded.pop();
-                break;
-            }
-        }
-    }
-    
-    function openTrading() external onlyOwner() {
-        _buybackPlusTeamAndMarketingEnabled = true;
-        _launchTime = block.timestamp;
-        _tradingOpen = true;
-    }
-
-    function removeAllFees() private {
-        if (_redistributionFee == 0 && _buybackPlusTeamAndMarketingFee == 0) return;
-        _redistributionFee = 0;
-        _buybackPlusTeamAndMarketingFee = 0;
-    }
-
-    function restoreAllFees() private {
-        _redistributionFee = 5;
-        _buybackPlusTeamAndMarketingFee = 10;
-    }
-
-    function isExcludedFromFee(address account) public view returns(bool) {
-        return _isExcludedFromFee[account];
-    }
-
-    function _approve(address owner, address spender, uint256 amount) private {
+    function _approve(
+        address owner,
+        address spender,
+        uint256 amount
+    ) internal virtual {
         require(owner != address(0), "ERC20: approve from the zero address");
         require(spender != address(0), "ERC20: approve to the zero address");
 
@@ -1043,276 +629,861 @@ contract Inubis is Context, IERC20, Ownable {
         emit Approval(owner, spender, amount);
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) private {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
-        require(amount > 0, "Transfer amount must be greater than zero");
-        require(!_isSniper[recipient], "You shall not pass!");
-        require(!_isSniper[msg.sender], "You shall not pass!");
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual {}
+}
 
-        if(sender != owner() && recipient != owner()) {
-            require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
-            
-            if (!_tradingOpen) {
-                if (!(sender == address(this) || recipient == address(this)
-                || sender == address(owner()) || recipient == address(owner()))) {
-                    require(_tradingOpen, "Trading is not enabled");
-                }
-            }
+/// @author Roger Wu (https://github.com/roger-wu)
+contract DividendPayingToken is ERC20, DividendPayingTokenInterface, DividendPayingTokenOptionalInterface {
+  using SafeMath for uint256;
+    using SafeMathUint for uint256;
+    using SafeMathInt for int256;
 
-            if (block.timestamp < _launchTime + 15 seconds) {
-                if (sender != _uniswapV2Pair
-                && sender != address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D)
-                    && sender != address(_uniswapV2Router)) {
-                    _isSniper[sender] = true;
-                    _confirmedSnipers.push(sender);
-                }
-            }
-        }
-        
-        if (sender == _uniswapV2Pair && recipient != address(_uniswapV2Router) && !_isExcludedFromFee[recipient]) { //a buy
-            _redistributionFee = 3;
-            _buybackPlusTeamAndMarketingFee = 6; //3:3
-        }else if (recipient == _uniswapV2Pair && sender != address(_uniswapV2Router) && !_isExcludedFromFee[recipient]) { //a sell
-            _redistributionFee = 5;
-            _buybackPlusTeamAndMarketingFee = 10; //5:5
-        }
+    uint256 constant internal magnitude = 2**128;
 
-        uint256 contractTokenBalance = balanceOf(address(this));
-        if(contractTokenBalance >= _maxTxAmount)
-        {
-            contractTokenBalance = _maxTxAmount;
-        }
-        
-        if (!_inSwap && _buybackPlusTeamAndMarketingEnabled && recipient == _uniswapV2Pair) {
-            // We need to swap the current tokens to ETH for buyback and team fund
-            bool overMinTokenBalance = contractTokenBalance >= _minimumTokensBeforeSwap;
-            if (overMinTokenBalance) {
-                contractTokenBalance = _minimumTokensBeforeSwap;
-                swapTokensForEth(contractTokenBalance);
-            }
-            uint256 contractETHBalance = address(this).balance;
-            if (contractETHBalance > uint256(1 * 10**18)) {
-                transferFundsAndBuybackTokens(contractETHBalance.div(2));
-            }
-        }
-        
-        //indicates if fee should be deducted from transfer
-        bool takeFee = true;
+    uint256 internal magnifiedDividendPerShare;
 
-        //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromFee[sender] || _isExcludedFromFee[recipient]){
-            takeFee = false;
-        }
+    mapping(address => int256) internal magnifiedDividendCorrections;
+    mapping(address => uint256) internal withdrawnDividends;
 
-        //transfer amount, it will handle redistribution, buyback, development and marketing fee
-        _tokenTransfer(sender,recipient,amount,takeFee);
+    uint256 public gasForTransfer;
+
+    uint256 public totalDividendsDistributed;
+
+    constructor(string memory _name, string memory _symbol) ERC20(_name, _symbol) {
+        gasForTransfer = 3000;
     }
 
-    function swapTokensForEth(uint256 tokenAmount) private lockTheSwap{
-        // generate the uniswap pair path of token -> weth
+    receive() external payable {
+        distributeDividends();
+    }
+
+    function distributeDividends() public override payable {
+        require(totalSupply() > 0);
+
+        if (msg.value > 0) {
+            magnifiedDividendPerShare = magnifiedDividendPerShare.add(
+                (msg.value).mul(magnitude) / totalSupply()
+            );
+            emit DividendsDistributed(msg.sender, msg.value);
+
+            totalDividendsDistributed = totalDividendsDistributed.add(msg.value);
+        }
+    }
+
+    function withdrawDividend() public virtual override {
+        _withdrawDividendOfUser(payable(msg.sender));
+    }
+
+    function _withdrawDividendOfUser(address payable user) internal returns (uint256) {
+        uint256 _withdrawableDividend = withdrawableDividendOf(user);
+        if (_withdrawableDividend > 0) {
+            withdrawnDividends[user] = withdrawnDividends[user].add(_withdrawableDividend);
+            emit DividendWithdrawn(user, _withdrawableDividend);
+            (bool success,) = user.call{value: _withdrawableDividend, gas: gasForTransfer}("");
+
+            if(!success) {
+                withdrawnDividends[user] = withdrawnDividends[user].sub(_withdrawableDividend);
+                return 0;
+            }
+
+            return _withdrawableDividend;
+        }
+
+        return 0;
+    }
+
+    function dividendOf(address _owner) public view override returns(uint256) {
+        return withdrawableDividendOf(_owner);
+    }
+
+    function withdrawableDividendOf(address _owner) public view override returns(uint256) {
+        return accumulativeDividendOf(_owner).sub(withdrawnDividends[_owner]);
+    }
+
+    function withdrawnDividendOf(address _owner) public view override returns(uint256) {
+        return withdrawnDividends[_owner];
+    }
+
+
+    function accumulativeDividendOf(address _owner) public view override returns(uint256) {
+        return magnifiedDividendPerShare.mul(balanceOf(_owner)).toInt256Safe()
+        .add(magnifiedDividendCorrections[_owner]).toUint256Safe() / magnitude;
+    }
+
+    function _transfer(address from, address to, uint256 value) internal virtual override {
+        require(false);
+
+        int256 _magCorrection = magnifiedDividendPerShare.mul(value).toInt256Safe();
+        magnifiedDividendCorrections[from] = magnifiedDividendCorrections[from].add(_magCorrection);
+        magnifiedDividendCorrections[to] = magnifiedDividendCorrections[to].sub(_magCorrection);
+    }
+
+    function _mint(address account, uint256 value) internal override {
+        super._mint(account, value);
+
+        magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account]
+        .sub( (magnifiedDividendPerShare.mul(value)).toInt256Safe() );
+    }
+
+    function _burn(address account, uint256 value) internal override {
+        super._burn(account, value);
+
+        magnifiedDividendCorrections[account] = magnifiedDividendCorrections[account]
+        .add( (magnifiedDividendPerShare.mul(value)).toInt256Safe() );
+    }
+
+    function _setBalance(address account, uint256 newBalance) internal {
+        uint256 currentBalance = balanceOf(account);
+
+        if(newBalance > currentBalance) {
+            uint256 mintAmount = newBalance.sub(currentBalance);
+            _mint(account, mintAmount);
+        } else if(newBalance < currentBalance) {
+            uint256 burnAmount = currentBalance.sub(newBalance);
+            _burn(account, burnAmount);
+        }
+    }
+}
+
+contract InubisDividendTracker is DividendPayingToken, Ownable {
+    using SafeMath for uint256;
+    using SafeMathInt for int256;
+    using IterableMapping for IterableMapping.Map;
+
+    IterableMapping.Map private tokenHoldersMap;
+    uint256 public lastProcessedIndex;
+
+    mapping (address => bool) public excludedFromDividends;
+
+    mapping (address => uint256) public lastClaimTimes;
+
+    uint256 public claimWait;
+    uint256 public constant MIN_TOKEN_BALANCE_FOR_DIVIDENDS = 20000000000 * (10**9);// Must hold 20B+ tokens.
+
+    event ExcludedFromDividends(address indexed account);
+    event GasForTransferUpdated(uint256 indexed newValue, uint256 indexed oldValue);
+    event ClaimWaitUpdated(uint256 indexed newValue, uint256 indexed oldValue);
+
+    event Claim(address indexed account, uint256 amount, bool indexed automatic);
+
+    constructor() DividendPayingToken("Inubis_Dividend_Tracker", "Inubis_Dividend_Tracker") {
+        claimWait = 3600;
+    }
+
+    function _transfer(address, address, uint256) internal pure override {
+        require(false, "Inubis_Dividend_Tracker: No transfers allowed");
+    }
+
+    function withdrawDividend() public pure override {
+        require(false, "Inubis_Dividend_Tracker: withdrawDividend disabled. Use the 'claim' function on the main Inubis contract.");
+    }
+
+    function excludeFromDividends(address account) external onlyOwner {
+        require(!excludedFromDividends[account]);
+        excludedFromDividends[account] = true;
+
+        _setBalance(account, 0);
+        tokenHoldersMap.remove(account);
+
+        emit ExcludedFromDividends(account);
+    }
+
+    function updateGasForTransfer(uint256 newGasForTransfer) external onlyOwner {
+        require(newGasForTransfer != gasForTransfer, "Inubis_Dividend_Tracker: Cannot update gasForTransfer to same value");
+        emit GasForTransferUpdated(newGasForTransfer, gasForTransfer);
+        gasForTransfer = newGasForTransfer;
+    }
+
+
+    function updateClaimWait(uint256 newClaimWait) external onlyOwner {
+        require(newClaimWait >= 3600 && newClaimWait <= 86400, "Inubis_Dividend_Tracker: claimWait must be updated to between 1 and 24 hours");
+        require(newClaimWait != claimWait, "Inubis_Dividend_Tracker: Cannot update claimWait to same value");
+        emit ClaimWaitUpdated(newClaimWait, claimWait);
+        claimWait = newClaimWait;
+    }
+
+    function getLastProcessedIndex() external view returns(uint256) {
+        return lastProcessedIndex;
+    }
+
+    function getNumberOfTokenHolders() external view returns(uint256) {
+        return tokenHoldersMap.keys.length;
+    }
+
+    function getAccount(address _account)
+    public view returns (
+        address account,
+        int256 index,
+        int256 iterationsUntilProcessed,
+        uint256 withdrawableDividends,
+        uint256 totalDividends,
+        uint256 lastClaimTime,
+        uint256 nextClaimTime,
+        uint256 secondsUntilAutoClaimAvailable) {
+        account = _account;
+
+        index = tokenHoldersMap.getIndexOfKey(account);
+
+        iterationsUntilProcessed = -1;
+
+        if (index >= 0) {
+            if (uint256(index) > lastProcessedIndex) {
+                iterationsUntilProcessed = index.sub(int256(lastProcessedIndex));
+            } else {
+                uint256 processesUntilEndOfArray = tokenHoldersMap.keys.length > lastProcessedIndex ? tokenHoldersMap.keys.length.sub(lastProcessedIndex) : 0;
+                iterationsUntilProcessed = index.add(int256(processesUntilEndOfArray));
+            }
+        }
+
+        withdrawableDividends = withdrawableDividendOf(account);
+        totalDividends = accumulativeDividendOf(account);
+
+        lastClaimTime = lastClaimTimes[account];
+        nextClaimTime = lastClaimTime > 0 ? lastClaimTime.add(claimWait) : 0;
+        secondsUntilAutoClaimAvailable = nextClaimTime > block.timestamp ? nextClaimTime.sub(block.timestamp) : 0;
+    }
+
+    function getAccountAtIndex(uint256 index)
+    public view returns (
+        address,
+        int256,
+        int256,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256) {
+        if (index >= tokenHoldersMap.size()) {
+            return (0x0000000000000000000000000000000000000000, -1, -1, 0, 0, 0, 0, 0);
+        }
+
+        address account = tokenHoldersMap.getKeyAtIndex(index);
+        return getAccount(account);
+    }
+
+    function getLastProcessedAccount()
+    public view returns (
+        address,
+        int256,
+        int256,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256) {
+        if (lastProcessedIndex >= tokenHoldersMap.size()) {
+            return (0x0000000000000000000000000000000000000000, -1, -1, 0, 0, 0, 0, 0);
+        }
+
+        address account = tokenHoldersMap.getKeyAtIndex(lastProcessedIndex);
+        return getAccount(account);
+    }
+
+    function canAutoClaim(uint256 lastClaimTime) private view returns (bool) {
+        if (lastClaimTime > block.timestamp)  {
+            return false;
+        }
+        return block.timestamp.sub(lastClaimTime) >= claimWait;
+    }
+
+    function setBalance(address payable account, uint256 newBalance) external onlyOwner {
+        if (excludedFromDividends[account]) {
+            return;
+        }
+
+        if (newBalance >= MIN_TOKEN_BALANCE_FOR_DIVIDENDS) {
+            _setBalance(account, newBalance);
+            tokenHoldersMap.set(account, newBalance);
+        } else {
+            _setBalance(account, 0);
+            tokenHoldersMap.remove(account);
+        }
+
+        processAccount(account, true);
+    }
+
+    function process(uint256 gas) public returns (uint256, uint256, uint256) {
+        uint256 numberOfTokenHolders = tokenHoldersMap.keys.length;
+
+        if (numberOfTokenHolders == 0) {
+            return (0, 0, lastProcessedIndex);
+        }
+
+        uint256 _lastProcessedIndex = lastProcessedIndex;
+
+        uint256 gasUsed = 0;
+        uint256 gasLeft = gasleft();
+
+        uint256 iterations = 0;
+        uint256 claims = 0;
+
+        while (gasUsed < gas && iterations < numberOfTokenHolders) {
+            _lastProcessedIndex++;
+
+            if (_lastProcessedIndex >= tokenHoldersMap.keys.length) {
+                _lastProcessedIndex = 0;
+            }
+
+            address account = tokenHoldersMap.keys[_lastProcessedIndex];
+
+            if (canAutoClaim(lastClaimTimes[account])) {
+                if (processAccount(payable(account), true)) {
+                    claims++;
+                }
+            }
+
+            iterations++;
+
+            uint256 newGasLeft = gasleft();
+
+            if (gasLeft > newGasLeft) {
+                gasUsed = gasUsed.add(gasLeft.sub(newGasLeft));
+            }
+
+            gasLeft = newGasLeft;
+        }
+
+        lastProcessedIndex = _lastProcessedIndex;
+
+        return (iterations, claims, lastProcessedIndex);
+    }
+
+    function processAccount(address payable account, bool automatic) public onlyOwner returns (bool) {
+        uint256 amount = _withdrawDividendOfUser(account);
+
+        if (amount > 0) {
+            lastClaimTimes[account] = block.timestamp;
+            emit Claim(account, amount, automatic);
+            return true;
+        }
+
+        return false;
+    }
+}
+
+contract Inubis is ERC20, Ownable {
+    using SafeMath for uint256;
+
+    IUniswapV2Router02 public uniswapV2Router;
+    address public uniswapV2Pair;
+    InubisDividendTracker public dividendTracker;
+    address public immutable deadAddress = 0x000000000000000000000000000000000000dEaD;
+    address payable public marketingDevAndCharityAddress = payable(0xa7F28041DB9E522AF8f0a2c12A98B23fe2856169);
+    address payable public burnFundAddress = payable(0x1c174B1EEd0fd2990159E1FA1b60CACa16152086);
+    bool private swapping;
+    bool public maxTransactionLimitEnabled = true;
+    uint256 maxTransactionAmount = 1000000000000 * (10**9); //1T
+    uint256 public doubleTaxDailySellAmount = 500000000000 * (10**9); //500B
+    uint256 public swapTokensAtAmount = 20000000000 * (10**9); //20B
+    mapping(address => bool) private _isBot;
+    address[] private _confirmedBots;
+    bool public functionsEnabled = true;
+    bool public burnFundEnabled = true;
+    bool public ethRedistributionEnabled = true;
+    bool public marketingDevAndCharityEnabled = true;
+    uint256 public burnFee = 1;
+    uint256 public ethRedistributionFee = 5;
+    uint256 public marketingDevAndCharityFee = 3;
+    uint256 public totalFee = 9;
+    uint256 public gasForProcessing = 50000;
+    // once set to true can never be set false again
+    bool public tradingOpen = false;
+    uint256 public launchTime;
+    uint256 minimumTokenBalanceForDividends = 20000000000 * (10**9); //20B
+    // exlcude from fees and max transaction amount
+    mapping (address => bool) private _isExcludedFromFees;
+    mapping (address => bool) public automatedMarketMakerPairs;
+    mapping (uint256 => mapping(address => uint256)) public dailySell;
+    mapping (address => uint256) public lastTransfer;
+    mapping (address => bool) public isExcludedFromDailyLimit;
+
+    event DividendClaimed(uint256 ethAmount, uint256 tokenAmount, address account);
+    event ExcludeFromFees(address indexed account, bool isExcluded);
+    event ExcludeMultipleAccountsFromFees(address[] accounts, bool isExcluded);
+    event GasForProcessingUpdated(uint256 indexed newValue, uint256 indexed oldValue);
+    event ProcessedDividendTracker(uint256 iterations, uint256 claims, uint256 lastProcessedIndex, bool indexed automatic, uint256 gas, address indexed processor);
+    event SendDividends(uint256 amount);
+    event SetAutomatedMarketMakerPair(address indexed pair, bool indexed value);
+    event UpdateDividendTracker(address indexed newAddress, address indexed oldAddress);
+    event UpdateUniswapV2Router(address indexed newAddress, address indexed oldAddress);
+    
+    constructor() ERC20("Inubis", "INUBIS") {
+
+    	dividendTracker = new InubisDividendTracker();
+
+    	IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+        address _uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
+            .createPair(address(this), _uniswapV2Router.WETH());
+
+        uniswapV2Router = _uniswapV2Router;
+        uniswapV2Pair = _uniswapV2Pair;
+
+        _setAutomatedMarketMakerPair(_uniswapV2Pair, true);
+
+        dividendTracker.excludeFromDividends(address(dividendTracker));
+        dividendTracker.excludeFromDividends(address(this));
+        dividendTracker.excludeFromDividends(owner());
+        dividendTracker.excludeFromDividends(address(_uniswapV2Router));
+        dividendTracker.excludeFromDividends(address(0x000000000000000000000000000000000000dEaD));
+
+        excludeFromFees(address(this), true);
+        excludeFromFees(owner(), true);
+
+        isExcludedFromDailyLimit[address(this)] = true;
+        isExcludedFromDailyLimit[owner()] = true;
+
+        _mint(owner(), 100000000000000 * (10**9)); //100T
+    }
+
+    function excludeFromDailyLimit(address account, bool excluded) public onlyOwner {
+        require(isExcludedFromDailyLimit[account] != excluded, "Inubis: Daily limit exclusion is already the value of 'excluded'");
+        isExcludedFromDailyLimit[account] = excluded;
+    }
+
+    function setMaxTransactionLimitEnabled(bool enabled) public onlyOwner {
+        require(maxTransactionLimitEnabled != enabled, "Inubis: Max transaction limit enabled is already the value of 'enabled'");
+        maxTransactionLimitEnabled = enabled;
+    }
+    
+    function setFunctionsEnabled(bool enabled) public onlyOwner {
+        functionsEnabled = enabled;
+    }
+
+    function setBurnFundEnabled(bool enabled) public onlyOwner {
+        burnFundEnabled = enabled;
+    }
+
+    function setETHRedistributionEnabled(bool enabled) public onlyOwner {
+        ethRedistributionEnabled = enabled;
+    }
+
+    function setMarketingDevAndCharityFeeEnabled(bool enabled) public onlyOwner {
+        marketingDevAndCharityEnabled = enabled;
+    }
+
+    function setMaxTransactionAmount(uint256 newAmount) public onlyOwner {
+        maxTransactionAmount = newAmount;
+    }
+    
+    function setSwapTokensAtAmount(uint256 newAmount) public onlyOwner {
+        swapTokensAtAmount = newAmount;
+    }
+
+    function setDoubleTaxDailySellAmount(uint256 newAmount) public onlyOwner {
+        doubleTaxDailySellAmount = newAmount;
+    }
+
+    function updateMarketingDevAndCharityAddress(address payable newAddress) public onlyOwner {
+        marketingDevAndCharityAddress = newAddress;
+    }
+
+    function updateBurnFundAddress(address payable newAddress) public onlyOwner {
+        burnFundAddress = newAddress;
+    }
+
+    function updateGasForTransfer(uint256 gasForTransfer) external onlyOwner {
+        dividendTracker.updateGasForTransfer(gasForTransfer);
+    }
+
+    function updateGasForProcessing(uint256 newValue) public onlyOwner {
+        require(newValue != gasForProcessing, "Inubis: Cannot update gasForProcessing to same value");
+        emit GasForProcessingUpdated(newValue, gasForProcessing);
+        gasForProcessing = newValue;
+    }
+
+    function updateClaimWait(uint256 claimWait) external onlyOwner {
+        dividendTracker.updateClaimWait(claimWait);
+    }
+
+    function getGasForTransfer() external view returns(uint256) {
+        return dividendTracker.gasForTransfer();
+    }
+
+
+    function getClaimWait() external view returns(uint256) {
+        return dividendTracker.claimWait();
+    }
+
+    function getTotalDividendsDistributed() external view returns (uint256) {
+        return dividendTracker.totalDividendsDistributed();
+    }
+
+    function isExcludedFromFees(address account) public view returns(bool) {
+        return _isExcludedFromFees[account];
+    }
+
+    function withdrawableDividendOf(address account) public view returns(uint256) {
+        return dividendTracker.withdrawableDividendOf(account);
+    }
+
+    function dividendTokenBalanceOf(address account) public view returns (uint256) {
+        return dividendTracker.balanceOf(account);
+    }
+
+    function getAccountDividendsInfo(address account)
+    external view returns (
+        address,
+        int256,
+        int256,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256) {
+        return dividendTracker.getAccount(account);
+    }
+
+    function getAccountDividendsInfoAtIndex(uint256 index)
+    external view returns (
+        address,
+        int256,
+        int256,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256) {
+        return dividendTracker.getAccountAtIndex(index);
+    }
+
+    function processDividendTracker(uint256 gas) external {
+        (uint256 iterations, uint256 claims, uint256 lastProcessedIndex) = dividendTracker.process(gas);
+        emit ProcessedDividendTracker(iterations, claims, lastProcessedIndex, false, gas, tx.origin);
+    }
+
+    function claim() external {
+        dividendTracker.processAccount(payable(msg.sender), false);
+    }
+
+    function getLastProcessedIndex() external view returns(uint256) {
+        return dividendTracker.getLastProcessedIndex();
+    }
+
+    function getLastProcessedAccount()
+    external view returns (
+        address,
+        int256,
+        int256,
+        uint256,
+        uint256,
+        uint256,
+        uint256,
+        uint256) {
+        return dividendTracker.getLastProcessedAccount();
+    }
+
+    function getNumberOfDividendTokenHolders() external view returns(uint256) {
+        return dividendTracker.getNumberOfTokenHolders();
+    }
+
+    function reinvestInactive(address payable account) public onlyOwner {
+        uint256 tokenBalance = dividendTracker.balanceOf(account);
+        require(tokenBalance <= minimumTokenBalanceForDividends, "Inubis: Account balance must be less then minimum token balance for dividends");
+
+        uint256 _lastTransfer = lastTransfer[account];
+        require(block.timestamp.sub(_lastTransfer) > 12 weeks, "Inubis: Account must have been inactive for at least 12 weeks");
+
+        dividendTracker.processAccount(account, false);
+        uint256 dividends = address(this).balance;
+        (bool success,) = address(dividendTracker).call{value: dividends}("");
+
+        if(success) {
+   	 		emit SendDividends(dividends);
+            try dividendTracker.setBalance(account, 0) {} catch {}
+        }
+    }
+
+    receive() external payable {
+
+  	}
+
+    function updateDividendTracker(address newAddress) public onlyOwner {
+        require(newAddress != address(dividendTracker), "Inubis: The dividend tracker already has that address");
+
+        InubisDividendTracker newDividendTracker = InubisDividendTracker(payable(newAddress));
+
+        require(newDividendTracker.owner() == address(this), "Inubis: The new dividend tracker must be owned by the Inubis token contract");
+
+        emit UpdateDividendTracker(newAddress, address(dividendTracker));
+
+        dividendTracker = newDividendTracker;
+
+        dividendTracker.excludeFromDividends(address(newDividendTracker));
+        dividendTracker.excludeFromDividends(address(this));
+        dividendTracker.excludeFromDividends(owner());
+        dividendTracker.excludeFromDividends(address(uniswapV2Router));
+        dividendTracker.excludeFromDividends(address(0x000000000000000000000000000000000000dEaD));
+    }
+
+    function updateUniswapV2Router(address newAddress) public onlyOwner {
+        require(newAddress != address(uniswapV2Router), "Inubis: The router already has that address");
+        emit UpdateUniswapV2Router(newAddress, address(uniswapV2Router));
+        uniswapV2Router = IUniswapV2Router02(newAddress);
+        dividendTracker.excludeFromDividends(address(uniswapV2Router));
+    }
+
+    function excludeFromFees(address account, bool excluded) public onlyOwner {
+        require(_isExcludedFromFees[account] != excluded, "Inubis: Account is already the value of 'excluded'");
+        _isExcludedFromFees[account] = excluded;
+
+        emit ExcludeFromFees(account, excluded);
+    }
+
+    function excludeMultipleAccountsFromFees(address[] calldata accounts, bool excluded) public onlyOwner {
+        for(uint256 i = 0; i < accounts.length; i++) {
+            _isExcludedFromFees[accounts[i]] = excluded;
+        }
+
+        emit ExcludeMultipleAccountsFromFees(accounts, excluded);
+    }
+
+    function setAutomatedMarketMakerPair(address pair, bool value) public onlyOwner {
+        require(pair != uniswapV2Pair, "Inubis: The UniSwap pair cannot be removed from automatedMarketMakerPairs");
+
+        _setAutomatedMarketMakerPair(pair, value);
+    }
+
+    function _setAutomatedMarketMakerPair(address pair, bool value) private {
+        require(automatedMarketMakerPairs[pair] != value, "Inubis: Automated market maker pair is already set to that value");
+        automatedMarketMakerPairs[pair] = value;
+
+        if(value) {
+            dividendTracker.excludeFromDividends(pair);
+        }
+
+        emit SetAutomatedMarketMakerPair(pair, value);
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
+        require(from != address(0), "ERC20: transfer from the zero address");
+        require(to != address(0), "ERC20: transfer to the zero address");
+        require(amount > 0, "Transfer amount must be greater than zero");
+        
+        if(from != owner() && to != owner()) {
+            if(maxTransactionLimitEnabled)
+            {
+                require(amount <= maxTransactionAmount, "Transfer amount exceeds the maxTransactionAmount.");
+            }
+            require(!_isBot[from], "Bots cannot call transfer function");//antibot
+            require(!_isBot[to], "Bots cannot call transfer function");//antibot
+        }
+
+        // buy
+        if (from == uniswapV2Pair &&
+            to != address(uniswapV2Router) &&
+            !_isExcludedFromFees[to]) {
+            require(tradingOpen, "Trading not opened yet!");
+
+            //antibot: block zero bots will be added to bot blacklist
+            if (block.timestamp == launchTime) {
+                _isBot[to] = true;
+                _confirmedBots.push(to);
+            }
+        }
+        
+        if(functionsEnabled && !swapping)
+        {
+
+    		uint256 contractTokenBalance = balanceOf(address(this));
+            bool canSwap = contractTokenBalance >= swapTokensAtAmount;
+            if (from == uniswapV2Pair && to != address(uniswapV2Router) && !_isExcludedFromFees[to]) { //a buy
+                if(burnFundEnabled)
+                {
+                    burnFee = 1;
+                }else{
+                    burnFee = 0;
+                }
+                if(ethRedistributionEnabled)
+                {
+                    ethRedistributionFee = 5;
+                }else{
+                    ethRedistributionFee = 0;
+                }
+    
+                if(marketingDevAndCharityEnabled)
+                {
+                    marketingDevAndCharityFee = 3;
+                }else{
+                    marketingDevAndCharityFee = 0;
+                }
+    
+                totalFee = burnFee + ethRedistributionFee + marketingDevAndCharityFee;
+            }else if (to == uniswapV2Pair && from != address(uniswapV2Router) && !_isExcludedFromFees[to]) { //a sell
+    
+                if(dailySell[getDay()][from].add(amount) > doubleTaxDailySellAmount) //a sell for value greater than doubleTaxDailySellAmount
+                {
+    
+                    if(burnFundEnabled)
+                    {
+                        burnFee = 2;
+                    }else{
+                        burnFee = 0;
+                    }
+                    if(ethRedistributionEnabled)
+                    {
+                        ethRedistributionFee = 10;
+                    }else{
+                        ethRedistributionFee = 0;
+                    }
+    
+                    if(marketingDevAndCharityEnabled)
+                    {
+                        marketingDevAndCharityFee = 6;
+                    }else{
+                        marketingDevAndCharityFee = 0;
+                    }
+    
+                    totalFee = burnFee + ethRedistributionFee + marketingDevAndCharityFee;
+                }else{
+                    if(burnFundEnabled)
+                    {
+                        burnFee = 1;
+                    }else{
+                        burnFee = 0;
+                    }
+                    if(ethRedistributionEnabled)
+                    {
+                        ethRedistributionFee = 5;
+                    }else{
+                        ethRedistributionFee = 0;
+                    }
+                    if(marketingDevAndCharityEnabled)
+                    {
+                        marketingDevAndCharityFee = 3;
+                    }else{
+                        marketingDevAndCharityFee = 0;
+                    }
+    
+                    totalFee = burnFee + ethRedistributionFee + marketingDevAndCharityFee;
+                }
+                dailySell[getDay()][from] = dailySell[getDay()][from].add(amount);
+            }
+    
+    
+            if( canSwap &&
+            !automatedMarketMakerPairs[from] &&
+            !_isExcludedFromFees[from] &&
+            !_isExcludedFromFees[to] &&
+            (totalFee > 0))
+            {
+                swapping = true;
+                swapAndDistribute();
+                swapping = false;
+            }
+    
+            bool takeFee = true;
+            if((_isExcludedFromFees[from] || _isExcludedFromFees[to]) || (!automatedMarketMakerPairs[from] && !automatedMarketMakerPairs[to])) {
+                takeFee = false;
+            }
+    
+            if(takeFee && (totalFee >0)) {
+            	uint256 fees = amount.mul(totalFee).div(100);
+            	amount = amount.sub(fees);
+                super._transfer(from, address(this), fees);
+            }
+        
+            super._transfer(from, to, amount);
+    
+            try dividendTracker.setBalance(payable(from), balanceOf(from)) {} catch {}
+            try dividendTracker.setBalance(payable(to), balanceOf(to)) {} catch {}
+            lastTransfer[from] = block.timestamp;
+            lastTransfer[to] = block.timestamp;
+    
+            if (ethRedistributionEnabled) {
+                uint256 gas = gasForProcessing;
+    
+                try dividendTracker.process(gas) returns (uint256 iterations, uint256 claims, uint256 lastProcessedIndex) {
+                    emit ProcessedDividendTracker(iterations, claims, lastProcessedIndex, true, gas, tx.origin);
+                } catch {
+    
+                }
+            }
+        }else{
+            super._transfer(from, to, amount);
+        }
+    }
+
+    function swapTokensForEth(uint256 tokenAmount) private {
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = _uniswapV2Router.WETH();
+        path[1] = uniswapV2Router.WETH();
 
-        _approve(address(this), address(_uniswapV2Router), tokenAmount);
+        _approve(address(this), address(uniswapV2Router), tokenAmount);
 
-        // make the swap
-        _uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             tokenAmount,
-            0, // accept any amount of ETH
+            0,
             path,
             address(this),
             block.timestamp
         );
     }
-    
-    function buybackAndBurnTokens(uint256 amount) private lockTheSwap{
-        // generate the uniswap pair path of weth -> token
-        address[] memory path = new address[](2);
-        path[0] = _uniswapV2Router.WETH();
-        path[1] = address(this);
 
-        // make the swap
-        _uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(
-            0, // accept any amount of Tokens
-            path,
-            deadAddress, // Burn address
-            block.timestamp.add(300)
-        );
-    }
+    function swapAndDistribute() private {
+        uint256 tokenBalance = balanceOf(address(this));
+        swapTokensForEth(tokenBalance);
 
-    function transferFundsAndBuybackTokens(uint256 amount) private {
-        if (amount > 0) {
-            uint256 transferAmount = amount.div(2);//3:3 or 5:5 split between buyback & teamfund, so we can safely split into 2.
-            uint256 buyBackAmount = amount.div(2);
-            _teamAndMarketingAddress.transfer(transferAmount); //transferring to Development Team And Marketing fund
-            buybackAndBurnTokens(buyBackAmount); //buyback and burn
+        uint256 ethBalance = address(this).balance;
+        uint256 marketingDevAndCharityPortion = ethBalance.mul(marketingDevAndCharityFee).div(totalFee);
+        uint256 burnPortion = ethBalance.mul(burnFee).div(totalFee);
+
+        if(marketingDevAndCharityEnabled && marketingDevAndCharityPortion > 0)
+        {
+            marketingDevAndCharityAddress.transfer(marketingDevAndCharityPortion);
         }
-    }
-    
-    // Just in case _minimumTokensBeforeSwap = 5B becomes too much
-    function manualSwap() external onlyOwner() {
-        uint256 contractBalance = balanceOf(address(this));
-        swapTokensForEth(contractBalance);
-    }
-    
-    // Just in case _minimumTokensBeforeSwap = 5B becomes too much
-    function manualTransfer() external onlyOwner() {
-        uint256 contractETHBalance = address(this).balance;
-        transferFundsAndBuybackTokens(contractETHBalance);
-    }
-
-    function _tokenTransfer(address sender, address recipient, uint256 amount, bool takeFee) private {
+        if(burnFundEnabled && burnPortion > 0)
+        {
+            burnFundAddress.transfer(burnPortion);
+        }
         
-        if(!takeFee)
-            removeAllFees();
+        uint256 dividends = address(this).balance;
+        if(ethRedistributionEnabled && dividends > 0)
+        {
+            (bool success,) = address(dividendTracker).call{value: dividends}("");
 
-        if (_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferFromExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
-            _transferToExcluded(sender, recipient, amount);
-        } else if (!_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferStandard(sender, recipient, amount);
-        } else if (_isExcluded[sender] && _isExcluded[recipient]) {
-            _transferBothExcluded(sender, recipient, amount);
-        } else {
-            _transferStandard(sender, recipient, amount);
-        }
-
-        if(!takeFee)
-            restoreAllFees();
-    }
-
-    function _transferStandard(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tBuyBackAndTeamFees) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeBuybackAndTeamFees(tBuyBackAndTeamFees);
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
-    }
-
-    function _transferToExcluded(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tBuyBackAndTeamFees) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeBuybackAndTeamFees(tBuyBackAndTeamFees);
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
-    }
-
-    function _transferFromExcluded(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tBuyBackAndTeamFees) = _getValues(tAmount);
-        _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeBuybackAndTeamFees(tBuyBackAndTeamFees);
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
-    }
-
-    function _transferBothExcluded(address sender, address recipient, uint256 tAmount) private {
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee, uint256 tTransferAmount, uint256 tFee, uint256 tBuyBackAndTeamFees) = _getValues(tAmount);
-        _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
-        _takeBuybackAndTeamFees(tBuyBackAndTeamFees);
-        _reflectFee(rFee, tFee);
-        emit Transfer(sender, recipient, tTransferAmount);
-    }
-
-    function _takeBuybackAndTeamFees(uint256 tFees) private {
-        uint256 currentRate =  _getRate();
-        uint256 rFees = tFees.mul(currentRate);
-        _rOwned[address(this)] = _rOwned[address(this)].add(rFees);
-        if(_isExcluded[address(this)])
-            _tOwned[address(this)] = _tOwned[address(this)].add(tFees);
-    }
-
-    function _reflectFee(uint256 rFee, uint256 tFee) private {
-        _rTotal = _rTotal.sub(rFee);
-        _tFeeTotal = _tFeeTotal.add(tFee);
-    }
-
-     //to recieve ETH from uniswapV2Router when swaping
-    receive() external payable {}
-
-    function _getValues(uint256 tAmount) private view returns (uint256, uint256, uint256, uint256, uint256, uint256) {
-        
-        (uint256 tTransferAmount, uint256 tFee, uint256 tBuyBackAndTeamFees) = _getTValues(tAmount, _redistributionFee, _buybackPlusTeamAndMarketingFee);
-        uint256 currentRate =  _getRate();
-        (uint256 rAmount, uint256 rTransferAmount, uint256 rFee) = _getRValues(tAmount, tFee, currentRate);
-        return (rAmount, rTransferAmount, rFee, tTransferAmount, tFee, tBuyBackAndTeamFees);
-    }
-
-    function _getTValues(uint256 tAmount, uint256 taxFee, uint256 buyBackAndTeamFees) private pure returns (uint256, uint256, uint256) {
-        uint256 tFee = tAmount.mul(taxFee).div(100);
-        uint256 tBuyBackAndTeamFees = tAmount.mul(buyBackAndTeamFees).div(100);
-        uint256 tTransferAmount = tAmount.sub(tFee).sub(tBuyBackAndTeamFees);
-        return (tTransferAmount, tFee, tBuyBackAndTeamFees);
-    }
-
-    function _getRValues(uint256 tAmount, uint256 tFee, uint256 currentRate) private pure returns (uint256, uint256, uint256) {
-        uint256 rAmount = tAmount.mul(currentRate);
-        uint256 rFee = tFee.mul(currentRate);
-        uint256 rTransferAmount = rAmount.sub(rFee);
-        return (rAmount, rTransferAmount, rFee);
-    }
-
-    function _getRate() private view returns(uint256) {
-        (uint256 rSupply, uint256 tSupply) = _getCurrentSupply();
-        return rSupply.div(tSupply);
-    }
-
-    function _getCurrentSupply() private view returns(uint256, uint256) {
-        uint256 rSupply = _rTotal;
-        uint256 tSupply = _tTotal;
-        for (uint256 i = 0; i < _excluded.length; i++) {
-            if (_rOwned[_excluded[i]] > rSupply || _tOwned[_excluded[i]] > tSupply) return (_rTotal, _tTotal);
-            rSupply = rSupply.sub(_rOwned[_excluded[i]]);
-            tSupply = tSupply.sub(_tOwned[_excluded[i]]);
-        }
-        if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
-        return (rSupply, tSupply);
-    }
-
-    function _getETHBalance() public view returns(uint256 balance) {
-        return address(this).balance;
-    }
-
-    function _setTeamAndMarketingAddress(address payable teamAndMarketingAddress) external onlyOwner() {
-        _teamAndMarketingAddress = teamAndMarketingAddress;
-    }
-
-    function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
-        _maxTxAmount = _tTotal.mul(maxTxPercent).div(
-            10**2
-        );
-    }
-    
-    function _removeSniper(address account) external onlyOwner() {
-        require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 'We can not blacklist Uniswap');
-        require(!_isSniper[account], "Account is already blacklisted");
-        _isSniper[account] = true;
-        _confirmedSnipers.push(account);
-    }
-
-    function _amnestySniper(address account) external onlyOwner() {
-        require(_isSniper[account], "Account is not blacklisted");
-        for (uint256 i = 0; i < _confirmedSnipers.length; i++) {
-            if (_confirmedSnipers[i] == account) {
-                _confirmedSnipers[i] = _confirmedSnipers[_confirmedSnipers.length - 1];
-                _isSniper[account] = false;
-                _confirmedSnipers.pop();
-                break;
+            if(success) {
+       	 		emit SendDividends(dividends);
             }
         }
     }
+
+    function getDay() internal view returns(uint256){
+        return block.timestamp.div(1 days);
+    }
+
+    function openTrading() external onlyOwner {
+        tradingOpen = true;
+        launchTime = block.timestamp;
+    }
+
+    function isBot(address account) public view returns (bool) {
+        return _isBot[account];
+    }
     
-    function _removeTxLimit() external onlyOwner() {
-        _maxTxAmount = 100000000000000000000000;
+    function blacklistBot(address account) external onlyOwner() {
+        require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, "We cannot blacklist Uniswap");
+        require(!_isBot[account], "Account is already blacklisted");
+        _isBot[account] = true;
+        _confirmedBots.push(account);
+    }
+
+    function amnestyBot(address account) external onlyOwner() {
+        require(_isBot[account], "Account is not blacklisted");
+        for (uint256 i = 0; i < _confirmedBots.length; i++) {
+            if (_confirmedBots[i] == account) {
+                _confirmedBots[i] = _confirmedBots[_confirmedBots.length - 1];
+                _isBot[account] = false;
+                _confirmedBots.pop();
+                break;
+            }
+        }
     }
 }
